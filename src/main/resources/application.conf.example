@@ -1,0 +1,35 @@
+application = {
+  pubsub = {
+    privateKey  = ""
+    projectId   = ""
+    apiKey      = ""
+    clientEmail = ""
+    acknowledgeGroupingSize = "" // number of messages required to acknowdlege
+    acknowledgeGroupingTime = "" // timeout to acknowdlege group of messages
+    publishGroupingSize = "" // number of messages required to publish
+    publishGroupingTime = "" // timeout to publish group of messages (seconds)
+  }
+  storage = {
+    projectId     = ""
+    privateKeyId  = ""
+    privateKey    = ""
+    clientEmail   = ""
+    clientId      = ""
+    bucketName    = ""
+  }
+  crawler = {
+    parallelism         = "" // number of messages to process in parallel
+    depth               = "" // number of levels to perform crawling
+    pubSubSubscription  = ""
+    pubSubTopic         = ""
+    urlLifeSpan         = "" // do not crawl this url within this time interval (seconds)
+    askTimeout          = "" // timeout for validator actor (seconds)
+  }
+  cassandra = {
+    address       = "127.0.0.1"
+    port          = "9042"
+    keyspaceName  = ""
+    urlTable      = ""
+    parallelism   = "" // number of messages to process in parallel.
+  }
+}
