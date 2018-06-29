@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.stream.ClosedShape
 import akka.stream.alpakka.googlecloud.pubsub.ReceivedMessage
 import akka.stream.scaladsl.{Broadcast, GraphDSL, RunnableGraph}
-import com.rhdzmota.crawler.model.Url
+import com.rhdzmota.crawler.model.{CustomResponse, Url}
 import com.rhdzmota.crawler.service.database.impl.Cassandra
 import com.rhdzmota.crawler.service.pubsub.impl.GCPubSub
 import com.rhdzmota.crawler.service.storage.impl.GCStorage
@@ -17,7 +17,7 @@ object App extends Context {
 
       // Broadcasting Variables
       val bcastReceivedMessages = builder.add(Broadcast[ReceivedMessage](outputPorts = 2))
-      val bcastDownload         = builder.add(Broadcast[(Url, Option[String])](outputPorts = 4))
+      val bcastDownload         = builder.add(Broadcast[CustomResponse](outputPorts  = 4))
 
       // Runnable Graph Definition
       GCPubSub.source ~>  bcastReceivedMessages ~> Crawler.validateAndDownload  ~>  bcastDownload ~> Crawler.extractUrls        ~> GCPubSub.sink
