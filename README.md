@@ -1,6 +1,6 @@
 # Web Crawler - Proof of Concept
 
-* Current version: *1.0.0*
+* Current version: *1.0.1*
 
 Crawler POC using **Scala** and **Akka Streams**.
 
