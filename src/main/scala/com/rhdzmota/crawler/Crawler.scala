@@ -7,9 +7,10 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.Timeout
 import com.rhdzmota.crawler.actor.Validator
-import com.rhdzmota.crawler.model.Url
+import com.rhdzmota.crawler.model.{CustomResponse, Url}
 import com.rhdzmota.crawler.util.ClientHttp
 import org.jsoup.Jsoup
+
 import scala.collection.JavaConverters._
 
 object Crawler extends ClientHttp with Context {
@@ -35,21 +36,20 @@ object Crawler extends ClientHttp with Context {
   val validate: Flow[Option[Url], Url, NotUsed] =
     depthValidation via recentCrawlValidation
 
-  val download: Flow[Url, (Url, Option[String]), NotUsed] =
-    Flow[Url].mapAsync[(Url, Option[String])](Settings.Crawler.parallelism)(getRequestAsString)
+  val download: Flow[Url, CustomResponse, NotUsed] =
+    Flow[Url].mapAsync[CustomResponse](Settings.Crawler.parallelism)(getRequestWithCustomResponse)
 
-  val validateAndDownload: Flow[ReceivedMessage, (Url, Option[String]), NotUsed] =
+  val validateAndDownload: Flow[ReceivedMessage, CustomResponse, NotUsed] =
     toUrl via validate via download
 
-  val printSink: Sink[(Url, Option[String]), NotUsed] =
-    Flow[(Url, Option[String])].map({ case (x, y) => x }).to(Sink.foreach(println))
+  val printSink: Sink[CustomResponse, NotUsed] =
+    Flow[CustomResponse].map(_.url).to(Sink.foreach(println))
 
-  val extractUrls: Flow[(Url, Option[String]), Url, NotUsed] =
-    Flow[(Url, Option[String])].mapConcat(from => getUrls(from))
+  val extractUrls: Flow[CustomResponse, Url, NotUsed] =
+    Flow[CustomResponse].mapConcat(from => getUrls(from))
 
-  def getUrls(from: (Url, Option[String])): List[Url] = from match {
-    case (_, None) => Nil
-    case (url, Some(response)) => Jsoup.parse(response).select("a[href]").asScala.toList
+  def getUrls(from: CustomResponse): List[Url] = (from.url, from.content, from.mediaType.map(_.fileExtensions contains "htm")) match {
+    case (url, Some(content), Some(true)) => Jsoup.parse(content.map(_.toChar).mkString).select("a[href]").asScala.toList
       .filter(_.attr("href").length != 0)
       .map(
       element => {
@@ -59,6 +59,7 @@ object Crawler extends ClientHttp with Context {
         else Url(url.uri + href, depth, url._id, url.crawlRequestId)
       }
     )
+    case _ => Nil
   }
 }
 

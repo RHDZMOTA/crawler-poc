@@ -5,7 +5,7 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       organization := "com.rhdzmota",
       scalaVersion := "2.12.6",
-      version      := "1.0.0"
+      version      := "1.0.1"
     )),
     name := "crawler-poc",
     libraryDependencies ++= {
