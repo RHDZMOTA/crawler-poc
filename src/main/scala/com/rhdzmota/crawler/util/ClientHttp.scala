@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
-import com.rhdzmota.crawler.model.Url
+import com.rhdzmota.crawler.model.{CustomResponse, Url}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -17,8 +17,12 @@ trait ClientHttp {
       HttpRequest(HttpMethods.GET, url.uri)
     ).map(url -> _)
 
-  def getRequestAsString(url: Url)(implicit actorSystem: ActorSystem, executionContext: ExecutionContext, materializer: Materializer): Future[(Url, Option[String])] = for {
-    httpResponse <- Http(actorSystem).singleRequest(HttpRequest(HttpMethods.GET, url.uri))
-    contentString <- Unmarshal(httpResponse.entity).to[String]
-  } yield if (httpResponse.status.isSuccess()) url -> Some(contentString) else url -> None
+  def getRequestWithCustomResponse(url: Url)(implicit actorSystem: ActorSystem, executionContext: ExecutionContext, materializer: Materializer): Future[CustomResponse] = for {
+    httpResponse  <- Http(actorSystem).singleRequest(HttpRequest(HttpMethods.GET, url.uri))
+    content       <- Unmarshal(httpResponse.entity).to[Array[Byte]]
+  } yield
+    if (httpResponse.status.isSuccess())
+      CustomResponse(url, Some(content), Some(httpResponse.entity.contentType.mediaType))
+    else
+      CustomResponse(url, None, None)
 }

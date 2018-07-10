@@ -6,10 +6,10 @@ import akka.stream.scaladsl.{Flow, Sink}
 import com.google.auth.Credentials
 import com.google.auth.oauth2.ServiceAccountCredentials
 import com.google.cloud.storage.{Blob, BlobInfo, Storage, StorageOptions}
-import com.rhdzmota.crawler.model.Url
+import com.rhdzmota.crawler.model.{CustomResponse, Url}
 import com.rhdzmota.crawler._
 
-case object GCStorage extends StorageTrait[(Url, Option[String]), Array[Byte], Blob] with Context {
+case object GCStorage extends StorageTrait[CustomResponse, Array[Byte], Blob] with Context {
     private val credentials: Credentials = new ServiceAccountCredentials(
       Settings.Storage.clientId,
       Settings.Storage.clientEmail,
@@ -24,10 +24,11 @@ case object GCStorage extends StorageTrait[(Url, Option[String]), Array[Byte], B
       content
     )
 
-    val toFile: Flow[(Url, Option[String]), (String, Array[Byte]), NotUsed] =
-      Flow[(Url, Option[String])].filter({case (_, optStr) => optStr.isDefined}).map({
-        case (url, Some(str)) => (url._id.toString, str.getBytes)
-        case (url, _)         => (url._id.toString, "None".getBytes)
+    val toFile: Flow[CustomResponse, (String, Array[Byte]), NotUsed] =
+      Flow[CustomResponse].filter(_.content.isDefined).map( customResponse => {
+        val fileName: String = customResponse.url._id.toString + customResponse.mediaType.flatMap(_.fileExtensions.lift(0).map("." + _)).getOrElse("")
+        val fileContent: Array[Byte] = customResponse.content.getOrElse("None".getBytes)
+        (fileName, fileContent)
       })
 
     val sink: Sink[(String, Array[Byte]), NotUsed] =
