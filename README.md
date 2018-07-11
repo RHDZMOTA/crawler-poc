@@ -82,6 +82,7 @@ CREATE TABLE crawler.url (
   id uuid,
   uri text,
   depth int,
+  maxDepth int,
   from_url uuid,
   crawl_request_id uuid,
   timestamp timestamp,
