@@ -14,7 +14,7 @@ class Validator extends Actor {
     seenUrls + (uri -> timestamp)
 
   override def receive: Receive = {
-    case _ @ Url(_, uri, _, _, _, timestamp) =>
+    case _ @ Url(_, uri, _, _, _, _, timestamp) =>
       val valid: Boolean = seenUrls.get(uri)
         .map(ts => (timestamp.getNanos - ts.getNanos) < Settings.Crawler.urlLifeSpan.toNanos)
         .getOrElse(true)

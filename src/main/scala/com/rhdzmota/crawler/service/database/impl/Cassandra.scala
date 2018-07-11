@@ -20,8 +20,8 @@ case object Cassandra extends Database[CustomResponse, Future[Done]] with Contex
 
   private val insertQuery: String =
     s"""
-       |INSERT INTO ${Settings.Cassandra.keyspaceName}.${Settings.Cassandra.urlTable}(id, uri, depth, from_url, crawl_request_id, timestamp)
-       |VALUES (?, ?, ?, ?, ?, ?)
+       |INSERT INTO ${Settings.Cassandra.keyspaceName}.${Settings.Cassandra.urlTable}(id, uri, depth, max_depth, from_url, crawl_request_id, timestamp)
+       |VALUES (?, ?, ?, ?, ?, ?, ?)
      """.stripMargin
 
   private val preparedStatement: PreparedStatement =
@@ -29,7 +29,7 @@ case object Cassandra extends Database[CustomResponse, Future[Done]] with Contex
 
   private val statementBinder: (Url, PreparedStatement) => BoundStatement =
     (url: Url, statement: PreparedStatement) => statement.bind(
-      url._id, url.uri, url.depth.asInstanceOf[java.lang.Integer], url.from, url.crawlRequestId, url.timestamp)
+      url._id, url.uri, url.depth.asInstanceOf[java.lang.Integer], url.maxDepth.asInstanceOf[java.lang.Integer], url.from, url.crawlRequestId, url.timestamp)
 
   val connectorToSink: Flow[CustomResponse, Url, NotUsed] =
     Flow[CustomResponse].map(customResponse => customResponse.url)
