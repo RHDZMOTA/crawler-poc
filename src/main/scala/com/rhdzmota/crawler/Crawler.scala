@@ -29,7 +29,7 @@ object Crawler extends ClientHttp with Context {
 
   val depthValidation: Flow[Option[Url], Url, NotUsed] =
     Flow[Option[Url]].filter {
-      case Some(url) => url.depth <= Settings.Crawler.depth
+      case Some(url) => url.depth <= url.maxDepth
       case None => false
     } map {_.get}
 
@@ -55,8 +55,8 @@ object Crawler extends ClientHttp with Context {
       element => {
         val href = element.attr("href").trim
         val depth = url.depth + 1
-        if (href.startsWith("https")) Url(href, depth, url._id, url.crawlRequestId)
-        else Url(url.uri + href, depth, url._id, url.crawlRequestId)
+        if (href.startsWith("http")) Url(href,           depth, url.maxDepth, url._id, url.crawlRequestId)
+        else                         Url(url.uri + href, depth, url.maxDepth, url._id, url.crawlRequestId)
       }
     )
     case _ => Nil
